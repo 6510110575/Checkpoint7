@@ -151,6 +151,36 @@ def tags_edit(tag_id):
 
     return flask.render_template("tags-edit.html", form=form, tag=tag)
 
+@app.route("/tags/delete/<int:tag_id>", methods=["GET"])
+def tags_delete(tag_id):
+    db = models.db
+    tag = db.session.query(models.Tag).get(tag_id)
+    notes_with_tag = db.session.query(models.Note).filter(models.Note.tags.any(id=tag_id)).all()
+
+    if tag:
+        if notes_with_tag:
+            fillform = ""
+            for note in notes_with_tag:
+                fillform += f'"{note.title}"'
+            return flask.render_template("confirm_delete_tag.html", tag=tag, fillform=fillform)
+        else:
+            db.session.delete(tag)
+            db.session.commit()
+    
+    return flask.redirect(flask.url_for("tags_manage"))
+
+
+@app.route("/tags/confirm_delete/<int:tag_id>", methods=["GET"])
+def tags_confirm_delete(tag_id):
+    db = models.db
+    tag = db.session.query(models.Tag).get(tag_id)
+    notes_with_tag = db.session.query(models.Note).filter(models.Note.tags.any(id=tag_id)).all()
+    for note in notes_with_tag:
+        note.tags.remove(tag)
+    db.session.delete(tag)
+    db.session.commit()
+    return flask.redirect(flask.url_for("tags_manage"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

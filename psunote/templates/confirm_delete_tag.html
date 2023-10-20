@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <h3 class="my-2">Confirm Deletion</h3>
+    <div class="alert alert-danger" role="alert">
+        Are you sure you want to delete this tag "{{ tag.name }}"? This action will also remove it from associated notes {{ fillform }}.
+    </div>
+
+    <a class="btn btn-danger" href="{{ url_for('tags_confirm_delete', tag_id=tag.id) }}">Confirm Deletion</a>
+    <a class="btn btn-secondary" href="{{ url_for('tags_manage') }}">Cancel</a>
+{% endblock %}
