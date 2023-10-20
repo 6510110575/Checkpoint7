@@ -127,6 +127,13 @@ def tags_view(tag_name):
         notes=notes,
     )
 
+@app.route("/tags/manage")
+def tags_manage():
+    db = models.db
+    tags = db.session.query(models.Tag).order_by(models.Tag.name).all()
+    return flask.render_template("tags-management.html", tags=tags)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
