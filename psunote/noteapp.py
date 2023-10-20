@@ -134,5 +134,23 @@ def tags_manage():
     tags = db.session.query(models.Tag).order_by(models.Tag.name).all()
     return flask.render_template("tags-management.html", tags=tags)
 
+@app.route("/tags/edit/<int:tag_id>", methods=["GET", "POST"])
+def tags_edit(tag_id):
+    db = models.db
+    
+    tag = db.session.query(models.Tag).get(tag_id)
+    form = forms.TagForm()
+    if form.validate_on_submit():
+        check_tag = db.session.query(models.Tag).filter(models.Tag.name == form.name.data).first()
+        if not check_tag or (check_tag.name == tag.name):
+            tag.name = form.name.data
+            db.session.commit()
+            return flask.redirect(flask.url_for("tags_manage"))
+        else:
+            flask.flash('Tag name "' + check_tag.name + '" already exists.')
+
+    return flask.render_template("tags-edit.html", form=form, tag=tag)
+
+
 if __name__ == "__main__":
     app.run(debug=True)

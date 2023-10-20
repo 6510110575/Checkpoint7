@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<h3 class="my-2">Edit tag: {{ tag.name }}</h3>
+<form action="" method="POST">
+  {{ form.hidden_tag() }}
+  <div class="form-group my-3">
+    {{ form.tags.label }}
+    {{ form.name(class='form-control', value=tag.name) }}
+  </div>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+  <button type="submit" class="btn btn-primary">Save</button>
+  <a class="btn btn-danger" href="{{ url_for('tags_manage') }}">Cancel</a>
+</form>
+
+{% endblock %}
