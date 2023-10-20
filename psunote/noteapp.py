@@ -1,4 +1,5 @@
 import flask
+from sqlalchemy import func
 
 import models
 import forms
@@ -68,6 +69,45 @@ def notes_delete(note_id):
         db.session.commit()
 
     return flask.redirect(flask.url_for("index"))
+
+@app.route("/notes/edit/<int:note_id>", methods=["GET", "POST"])
+def notes_edit(note_id):
+    db = models.db
+    note = db.session.query(models.Note).get(note_id)
+    current_tags = note.tags
+
+    fillform = ""
+    for nt in current_tags:
+        fillform = nt.name + ", "
+
+    form = forms.NoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.description = form.description.data
+
+        note_tags = []
+        for tag_name in form.tags.data:
+            tag = (
+                db.session.execute(db.select(models.Tag).where(models.Tag.name == tag_name))
+                .scalars()
+                .first()
+            )
+            if not tag:
+                tag = models.Tag(name=tag_name)
+                db.session.add(tag)
+
+            note.tags.append(tag)
+
+        note.tags = note_tags
+        note.updated_date = func.now()
+        
+        db.session.commit()
+        return flask.redirect(flask.url_for("index"))
+    
+    return flask.render_template("notes-edit.html", form=form, note=note, fillform=fillform)
+
+
 
 @app.route("/tags/<tag_name>")
 def tags_view(tag_name):
