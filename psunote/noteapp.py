@@ -73,4 +73,66 @@ def notes_delete(note_id):
 @app.route("/notes/edit/<int:note_id>", methods=["GET", "POST"])
 def notes_edit(note_id):
     db = models.db
-    note = db.se
+    note = db.session.query(models.Note).get(note_id)
+    current_tags = note.tags
+
+    fillform = ""
+    for tn in current_tags:
+        fillform += tn.name + ", "
+
+    form = forms.NoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.description = form.description.data
+
+        note_tags = []
+        for tag_name in form.tags.data:
+            if tag_name != '':
+                tag = (
+                    db.session.execute(db.select(models.Tag).where(models.Tag.name == tag_name))
+                    .scalars()
+                    .first()
+                )
+                if not tag:
+                    tag = models.Tag(name=tag_name)
+                    db.session.add(tag)
+
+                note_tags.append(tag)
+
+        note.tags = note_tags
+        note.updated_date = func.now()
+
+        db.session.commit()
+        return flask.redirect(flask.url_for("index"))
+
+    return flask.render_template("notes-edit.html", form=form, note=note, fillform=fillform)
+
+
+@app.route("/tags/<tag_name>")
+def tags_view(tag_name):
+    db = models.db
+    tag = (
+        db.session.execute(db.select(models.Tag).where(models.Tag.name == tag_name))
+        .scalars()
+        .first()
+    )
+    notes = db.session.execute(
+        db.select(models.Note).where(models.Note.tags.any(id=tag.id))
+    ).scalars()
+
+    return flask.render_template(
+        "tags-view.html",
+        tag_name=tag_name,
+        notes=notes,
+    )
+
+
+@app.route("/tags/manage")
+def tags_manage():
+    db = models.db
+    tags = db.session.query(models.Tag).order_by(models.Tag.name).all()
+    return flask.render_template("tags-management.html", tags=tags)
+
+if __name__ == "__main__":
+    app.run(debug=True)

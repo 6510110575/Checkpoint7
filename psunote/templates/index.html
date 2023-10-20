@@ -19,4 +19,11 @@
         <a href="{{ url_for('tags_view', tag_name=t.name) }}">{{ t.name }}</a>
     {% endfor %}
       <br>
-      Last updat
+      Last updatLast update: {{ note.updated_date }}
+    </div>
+    <a class="btn btn-success" href="{{ url_for('notes_edit', note_id=note.id) }}">Edit</a>
+    <a class="btn btn-danger" href="{{ url_for('notes_delete', note_id=note.id) }}">Delete</a>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
